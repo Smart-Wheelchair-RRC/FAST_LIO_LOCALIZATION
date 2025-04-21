@@ -69,7 +69,7 @@ Clone the repository and catkin_make:
     catkin_make
     source devel/setup.bash
 ```
-- Remember to source the livox_ros_driver before build (follow [livox_ros_driver](https://github.com/hku-mars/FAST_LIO#13-livox_ros_driver))
+- Remember to source the livox_ros_driver2 before build (follow similar steps to [livox_ros_driver2](https://github.com/hku-mars/FAST_LIO#13-livox_ros_driver) but for livox_ros_driver2)
 - If you want to use a custom build of PCL, add the following line to ~/.bashrc
   ```export PCL_ROOT={CUSTOM_PCL_PATH}```
 
@@ -107,9 +107,9 @@ rosbag play localization_test_scene_1.bag
 Or if you are running realtime
 
 ```shell
-roslaunch livox_ros_driver livox_lidar_msg.launch
+roslaunch livox_ros_driver2 msg_MID360.launch
 ```
-Please set the **publish_freq** in **livox_lidar_rviz.launch** to **10Hz**, to ensure there are enough points for global localization in a single scan. 
+Please set the **publish_freq** in **msg_MID360.launch** to **10Hz**, to ensure there are enough points for global localization in a single scan. 
 Support for higher frequency is coming soon.
 
 4. Provide initial pose
