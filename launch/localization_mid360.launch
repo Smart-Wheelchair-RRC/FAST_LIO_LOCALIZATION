@@ -15,7 +15,7 @@
 	<param name="cube_side_length" type="double" value="1000" />
 	<param name="runtime_pos_log_enable" type="bool" value="0" />
 	<param name="pcd_save_enable" type="bool" value="0" />
-    <node pkg="fast_lio_localization" type="fastlio_mapping" name="laserMapping" output="screen" />
+    <node pkg="fast_lio_localization" type="fastlio_localization_mapping" name="laserMapping" output="screen" />
 
 	<param name="pcd_map_topic" type="string" value="$(arg pcd_map_topic)"/>
 
