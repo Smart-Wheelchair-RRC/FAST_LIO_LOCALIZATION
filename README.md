@@ -114,6 +114,21 @@ Note that, during the initialization stage, it's better to keep the robot still 
 3. [FAST-LIO-SLAM](https://github.com/gisbi-kim/FAST_LIO_SLAM): The integration of FAST-LIO with [Scan-Context](https://github.com/irapkaist/scancontext) **loop closure** module.
 4. [LIO-SAM_based_relocalization](https://github.com/Gaochao-hit/LIO-SAM_based_relocalization): A simple system that can relocalize a robot on a built map based on LIO-SAM.
 
+## 5.Additional Features
+Added configuration to allow different lidar mounting orientation. Can be used if the lidar mounting is not parallel to the floor, such as in unitree g1 or other similar robots.
+Modify mid360.yaml:
+```
+use_odom_transform: true  # true: transform scan to odom frame before matching (must match mapping config) -> change this to false if your lidar is already mounted parallel to the floor
+odom_roll: 180.0        # Roll angle (degrees) from camera_init to odom
+odom_pitch: -7.5        # Pitch angle (degrees) from camera_init to odom
+odom_yaw: 0.0           # Yaw angle (degrees) from camera_init to odom
+```
+
+Transformation tree will become:
+```
+odom -> camera_init -> body -> base_link (where base_link is the frame parallel to the floor)
+```
+
 
 ## Acknowledgments
 Thanks for the authors of [FAST-LIO](https://github.com/hku-mars/FAST_LIO) and [LIO-SAM_based_relocalization](https://github.com/Gaochao-hit/LIO-SAM_based_relocalization). This package is build on top of the work done by the ROS1 package of Fast-Lio-Localization - https://github.com/HViktorTsoi/FAST_LIO_LOCALIZATION

@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
+
 import rclpy
 from rclpy.node import Node
+import rclpy.parameter
+import rclpy.parameter_service
 from sensor_msgs.msg import PointCloud2, Imu
 from livox_ros_driver2.msg import CustomMsg
+import ros2_numpy
+# from rcl_interfaces.srv import GetParameters
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
-import numpy as np
 
 qos_profile = QoSProfile(
     reliability=ReliabilityPolicy.RELIABLE,  # Ensure reliable message delivery
@@ -13,15 +17,6 @@ qos_profile = QoSProfile(
 )
 
 class LivoxLaserToPointcloud(Node):
-    LIVOX_DTYPE = np.dtype([
-        ('x', 'f4'),         # offset 0
-        ('y', 'f4'),         # offset 4
-        ('z', 'f4'),         # offset 8
-        ('intensity', 'f4'), # offset 12
-        ('tag', 'u1'),       # offset 16
-        ('line', 'u1'),      # offset 17
-        ('timestamp', 'f8')  # offset 18
-        ])
     def __init__(self):
         super().__init__("Invert_Livox_Scan")
 
@@ -43,22 +38,25 @@ class LivoxLaserToPointcloud(Node):
 
         self.pub_imu = self.create_publisher(Imu, "/livox/imu", qos_profile=qos_profile)
         self.sub_imu = self.create_subscription(Imu, "/livox/inverted_imu", self.imu_callback, qos_profile=qos_profile)
+        
 
     def pointcloud2_callback(self, msg: PointCloud2):
-        # 1. Map the buffer to our structure (Zero-copy view)
-        # We use frombuffer to interpret the raw bytes using our dtype
-        data = np.frombuffer(msg.data, dtype=self.LIVOX_DTYPE).copy()
-
-        # 2. Modify spatial coordinates
-        # These operations are vectorized and extremely fast
-        data['y'] = -data['y']
-        data['z'] = -data['z']
-
-        # 3. Reconstruct message
-        # We copy the original message to keep all metadata (header, fields, etc.)
-        out_msg = msg 
-        out_msg.data = data.tobytes()
+        data = ros2_numpy.numpify(msg)
+        # print(data)
         
+        pc = data['xyz']
+        # print(pc)
+        pc[:, 1] = -pc[:, 1]
+        pc[:, 2] = -pc[:, 2]
+        # print(pc)
+        
+        data = {"xyz": pc}  # Invert Y, Z
+        # print(data)
+
+        out_msg = ros2_numpy.msgify(PointCloud2, data)
+        out_msg.header = msg.header
+        # out_msg.header.stamp = self.get_clock().now().to_msg()
+        out_msg.point_step = 12
         self.pub_scan.publish(out_msg)
 
     def custom_msg_callback(self, msg: CustomMsg):

@@ -22,7 +22,7 @@ class PublishInitialPose(Node):
         initial_pose.header.frame_id = "map"
         self.pub_pose.publish(initial_pose)
 
-        self.get_logger().info(f"Initial Pose: {x} {y} {z} {yaw} {pitch} {roll}")
+        self.get_logger().info(f"Initial Pose: {x} {y} {z} {roll} {pitch} {yaw}")
 
 
 def main(args=None):
@@ -33,9 +33,9 @@ def main(args=None):
     parser.add_argument("x", type=float)
     parser.add_argument("y", type=float)
     parser.add_argument("z", type=float)
-    parser.add_argument("yaw", type=float)
-    parser.add_argument("pitch", type=float)
     parser.add_argument("roll", type=float)
+    parser.add_argument("pitch", type=float)
+    parser.add_argument("yaw", type=float)
     args = parser.parse_args()
 
     node.publish_pose(args.x, args.y, args.z, args.roll, args.pitch, args.yaw)

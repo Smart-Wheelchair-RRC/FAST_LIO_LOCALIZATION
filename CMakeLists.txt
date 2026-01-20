@@ -124,6 +124,11 @@ install(TARGETS fastlio_mapping
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+  fast_lio_localization/odom_topic.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 install(
   DIRECTORY config launch rviz
   DESTINATION share/${PROJECT_NAME}
