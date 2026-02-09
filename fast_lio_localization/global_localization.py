@@ -43,8 +43,8 @@ class FastLIOLocalization(Node):
                 ("pcd_map_topic", "/map"),
                 ("pcd_map_path", ""),
                 ("use_odom_transform", True),
-                ("odom_roll", 180.0),
-                ("odom_pitch", -7.5),
+                ("odom_roll", 0.0),
+                ("odom_pitch", 0.0),
                 ("odom_yaw", 0.0),
             ],
         )
