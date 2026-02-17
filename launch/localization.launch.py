@@ -4,6 +4,8 @@ from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
+import math
+import yaml
 
 import os
 
@@ -55,7 +57,8 @@ def generate_launch_description():
         executable="global_localization.py",
         name="global_localization",
         output="screen",
-        parameters=[{"map_voxel_size": 0.4,
+        parameters=[PathJoinSubstitution([config_path, config_file]),
+                    {"map_voxel_size": 0.4,
                      "scan_voxel_size": 0.1,
                      "freq_localization": 0.5,
                      "freq_global_map": 0.25,
@@ -72,6 +75,7 @@ def generate_launch_description():
         executable="transform_fusion.py",
         name="transform_fusion",
         output="screen",
+        parameters=[PathJoinSubstitution([config_path, config_file])],
     )
     
     # PCD to PointCloud2 publisher
@@ -89,7 +93,66 @@ def generate_launch_description():
         ]
     )
 
-    rviz_node = Node(package="rviz2", executable="rviz2", arguments=["-d", rviz_cfg], condition=IfCondition(rviz_use))
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        arguments=[
+            "-d", rviz_cfg,
+            "--ros-args",
+            "--log-level", "WARN"
+        ],
+        condition=IfCondition(rviz_use),
+    )
+
+    odom_converter_node = Node(
+        package="fast_lio_localization",
+        executable="odom_topic.py",
+        name="fastlio_odom_converter",
+        output="screen",
+    )
+
+    # Read the YAML config file to get odom orientation values
+    config_file_path = os.path.join(default_config_path, "mid360.yaml")
+    with open(config_file_path, 'r') as file:
+        yaml_config = yaml.safe_load(file)
+    
+    # Get odom orientation from YAML
+    odom_roll = yaml_config['/**']['ros__parameters']['publish']['odom_roll']
+    odom_pitch = yaml_config['/**']['ros__parameters']['publish']['odom_pitch']
+    odom_yaw = yaml_config['/**']['ros__parameters']['publish']['odom_yaw']
+    
+    # Static transform from body to base_link
+    # This flips the orientation back so base_link is aligned with odom/map frames
+    # Flip the signs: body->base_link is the inverse of odom->camera_init
+    roll = -odom_roll * math.pi / 180.0  # Negate and convert to radians
+    pitch = odom_pitch * math.pi / 180.0  # Negate and convert to radians
+    yaw = -odom_yaw * math.pi / 180.0    # Negate and convert to radians
+    
+    # Convert RPY to quaternion
+    cy = math.cos(yaw * 0.5)
+    sy = math.sin(yaw * 0.5)
+    cp = math.cos(pitch * 0.5)
+    sp = math.sin(pitch * 0.5)
+    cr = math.cos(roll * 0.5)
+    sr = math.sin(roll * 0.5)
+    
+    qw = cr * cp * cy + sr * sp * sy
+    qx = sr * cp * cy - cr * sp * sy
+    qy = cr * sp * cy + sr * cp * sy
+    qz = cr * cp * sy - sr * sp * cy
+    
+    body_to_base_link_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='body_to_base_link_broadcaster',
+        arguments=[
+            '0', '0', '0',  # x, y, z translation
+            str(qx), str(qy), str(qz), str(qw),  # quaternion
+            'body',
+            'base_link'
+        ],
+        output='screen'
+    )
 
     ld = LaunchDescription()
     ld.add_action(declare_use_sim_time_cmd)
@@ -105,5 +168,8 @@ def generate_launch_description():
     ld.add_action(global_localization_node)
     ld.add_action(transform_fusion_node)
     ld.add_action(pcd_publisher_node)
+    ld.add_action(body_to_base_link_tf)
+    ld.add_action(odom_converter_node)
+
 
     return ld
