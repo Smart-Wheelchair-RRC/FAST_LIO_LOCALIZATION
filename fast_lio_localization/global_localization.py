@@ -42,19 +42,19 @@ class FastLIOLocalization(Node):
                 ("fov_far", 300),
                 ("pcd_map_topic", "/map"),
                 ("pcd_map_path", ""),
-                ("use_odom_transform", True),
-                ("odom_roll", 180.0),
-                ("odom_pitch", -7.5),
-                ("odom_yaw", 0.0),
+                ("publish.use_odom_transform", False),
+                ("publish.odom_roll", 0.0),
+                ("publish.odom_pitch", 0.0),
+                ("publish.odom_yaw", 0.0),
             ],
         )
         
         # Check if odom transformation is enabled
-        self.use_odom_transform = self.get_parameter("use_odom_transform").value
+        self.use_odom_transform = self.get_parameter("publish.use_odom_transform").value
         if self.use_odom_transform:
-            self.get_logger().info(f"Odom transformation enabled: roll={self.get_parameter('odom_roll').value}°, "
-                                   f"pitch={self.get_parameter('odom_pitch').value}°, "
-                                   f"yaw={self.get_parameter('odom_yaw').value}°")
+            self.get_logger().info(f"Odom transformation enabled: roll={self.get_parameter('publish.odom_roll').value}°, "
+                                   f"pitch={self.get_parameter('publish.odom_pitch').value}°, "
+                                   f"yaw={self.get_parameter('publish.odom_yaw').value}°")
             self.get_logger().info("Will use TF tree to transform point clouds from camera_init to odom")
 
         # Initialize TF buffer and listener (must be before subscriptions)
@@ -172,9 +172,9 @@ class FastLIOLocalization(Node):
         # pose_estimation is T_map_to_odom (in odom frame, which is the correct orientation)
         if self.use_odom_transform:
             # Compute T_odom_to_camera_init from parameters
-            roll = np.radians(self.get_parameter("odom_roll").value)
-            pitch = np.radians(self.get_parameter("odom_pitch").value)
-            yaw = np.radians(self.get_parameter("odom_yaw").value)
+            roll = np.radians(self.get_parameter("publish.odom_roll").value)
+            pitch = np.radians(self.get_parameter("publish.odom_pitch").value)
+            yaw = np.radians(self.get_parameter("publish.odom_yaw").value)
             
             # Create rotation matrix (ZYX convention)
             cr, sr = np.cos(roll), np.sin(roll)
@@ -314,9 +314,9 @@ class FastLIOLocalization(Node):
             
             if self.use_odom_transform:
                 # Compute T_odom_to_camera_init from parameters (same as in transform_fusion.py)
-                roll = np.radians(self.get_parameter("odom_roll").value)
-                pitch = np.radians(self.get_parameter("odom_pitch").value)
-                yaw = np.radians(self.get_parameter("odom_yaw").value)
+                roll = np.radians(self.get_parameter("publish.odom_roll").value)
+                pitch = np.radians(self.get_parameter("publish.odom_pitch").value)
+                yaw = np.radians(self.get_parameter("publish.odom_yaw").value)
                 
                 # Create rotation matrix (ZYX convention)
                 cr, sr = np.cos(roll), np.sin(roll)

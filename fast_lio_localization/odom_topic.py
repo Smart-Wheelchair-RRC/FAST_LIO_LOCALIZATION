@@ -12,16 +12,38 @@ class FastLioOdomConverter(Node):
     def __init__(self):
         super().__init__("fastlio_odom_converter")
 
+        # Declare ROS2 parameters
+        self.declare_parameters(
+            namespace="",
+            parameters=[
+                ("publish.use_odom_transform", False),
+                ("publish.odom_roll", 0.0),
+                ("publish.odom_pitch", 0.0),
+                ("publish.odom_yaw", 0.0),
+            ],
+        )
+
+        # Check if odom transformation is enabled
+        self.use_odom_transform = self.get_parameter("publish.use_odom_transform").value
+        
+        if not self.use_odom_transform:
+            self.get_logger().info("Odom transform disabled - node will not process odometry")
+            # Still create subscriber/publisher but won't publish
+            self.sub = self.create_subscription(Odometry, "/Odometry", self.cb, 10)
+            self.pub = self.create_publisher(Odometry, "/odom", 10)
+            return
+
         # --- STATIC TRANSFORMS ---------------------------------------
         # 1. odom -> camera_init
-        R1 = self.rpy_to_matrix(np.radians(180.0),
-                                np.radians(-7.5),
-                                np.radians(0.0))
+        odom_roll = np.radians(self.get_parameter("publish.odom_roll").value)
+        odom_pitch = np.radians(self.get_parameter("publish.odom_pitch").value)
+        odom_yaw = np.radians(self.get_parameter("publish.odom_yaw").value)
+        R1 = self.rpy_to_matrix(odom_roll, odom_pitch, odom_yaw)
 
-        # 2. body -> base_link
-        R2 = self.rpy_to_matrix(np.radians(-180.0),
-                                np.radians(-7.5),
-                                np.radians(0.0))
+        # 2. body -> base_link (inverse of odom -> camera_init)
+        # Since odom has the same orientation as base_link, and camera_init has the same orientation as body,
+        # body -> base_link is simply the inverse of odom -> camera_init
+        R2 = np.linalg.inv(R1)
 
         # Combined static transform:
         # odom -> base_link = (odom->camera_init) * (body->base_link)
@@ -31,7 +53,11 @@ class FastLioOdomConverter(Node):
         self.sub = self.create_subscription(Odometry, "/Odometry", self.cb, 10)
         self.pub = self.create_publisher(Odometry, "/odom", 10)
 
-        self.get_logger().info("FAST-LIO pure-static odom converter started.")
+        self.get_logger().info(f"FAST-LIO odom converter started with parameters:")
+        self.get_logger().info(f"  odom->camera_init: roll={self.get_parameter('publish.odom_roll').value}°, "
+                              f"pitch={self.get_parameter('publish.odom_pitch').value}°, "
+                              f"yaw={self.get_parameter('publish.odom_yaw').value}°")
+        self.get_logger().info(f"  body->base_link: computed as inverse (to flip back)")
 
     # Utility: Convert RPY to 4x4 matrix
     def rpy_to_matrix(self, roll, pitch, yaw):
@@ -50,6 +76,10 @@ class FastLioOdomConverter(Node):
         return T
 
     def cb(self, msg):
+        # If odom transform is disabled, do nothing
+        if not self.use_odom_transform:
+            return
+            
         # camera_init -> body (dynamic odometry)
         T_cam_to_body = self.pose_to_mat(msg.pose.pose)
 

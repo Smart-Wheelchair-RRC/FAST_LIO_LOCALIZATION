@@ -29,9 +29,9 @@ class TransformFusion(Node):
         self.declare_parameters(
             namespace="",
             parameters=[
-                ("publish.use_odom_transform", True),
-                ("publish.odom_roll", 180.0),
-                ("publish.odom_pitch", -7.5),
+                ("publish.use_odom_transform", False),
+                ("publish.odom_roll", 0.0),
+                ("publish.odom_pitch", 0.0),
                 ("publish.odom_yaw", 0.0),
             ],
         )
