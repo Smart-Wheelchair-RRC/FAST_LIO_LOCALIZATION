@@ -119,8 +119,8 @@ Added configuration to allow different lidar mounting orientation. Can be used i
 Modify mid360.yaml:
 ```
 use_odom_transform: true  # true: transform scan to odom frame before matching (must match mapping config) -> change this to false if your lidar is already mounted parallel to the floor
-odom_roll: 180.0        # Roll angle (degrees) from camera_init to odom
-odom_pitch: -7.5        # Pitch angle (degrees) from camera_init to odom
+odom_roll: 0.0        # Roll angle (degrees) from camera_init to odom
+odom_pitch: 0.0        # Pitch angle (degrees) from camera_init to odom
 odom_yaw: 0.0           # Yaw angle (degrees) from camera_init to odom
 ```
 

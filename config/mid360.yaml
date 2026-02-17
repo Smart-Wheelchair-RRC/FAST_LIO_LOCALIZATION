@@ -7,7 +7,7 @@
         filter_size_map: 0.5
         cube_side_length: 1000.0
         runtime_pos_log_enable: false
-        map_file_path: "./test.pcd"
+        map_file_path: "/home/rey/unitree_g1_control/ros2_ws/src/mapping/FAST_LIO_LOCALIZATION2/PCD/scans.pcd"
 
         common:
             lid_topic:  "/livox/lidar"
@@ -43,9 +43,9 @@
             scan_publish_en:  true       # false: close all the point cloud output
             dense_publish_en: false      # false: low down the points number in a global-frame point clouds scan.
             scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
-            use_odom_transform: true  # true: transform scan to odom frame before matching (must match mapping config) -> change this to false if your lidar is already mounted parallel to the floor
-            odom_roll: 0.0        # Roll angle (degrees) from camera_init to odom
-            odom_pitch: 0.0        # Pitch angle (degrees) from camera_init to odom
+            use_odom_transform: true  # true: transform scan to odom frame before matching (must match mapping config)
+            odom_roll: 180.0        # Roll angle (degrees) from camera_init to odom
+            odom_pitch: -7.5        # Pitch angle (degrees) from camera_init to odom
             odom_yaw: 0.0           # Yaw angle (degrees) from camera_init to odom
 
         pcd_save:
